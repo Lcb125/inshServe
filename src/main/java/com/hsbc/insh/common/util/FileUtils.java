@@ -4,6 +4,7 @@ package com.hsbc.insh.common.util;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hsbc.insh.common.Enum.RespEnum;
+import com.hsbc.insh.common.entity.AddDBReq;
 import com.hsbc.insh.common.entity.FileInfo;
 import com.hsbc.insh.common.entity.ResponseResult;
 import com.hsbc.insh.service.FileInfoService;
@@ -18,10 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -29,10 +29,18 @@ import java.util.List;
 @Component
 public class FileUtils {
 
-    private final static String PATH = "C:/codebase/文件上传";
+    private final static String PATH = "C:/codebase/insh-gpt/pdf/";
+
+    private final static String VIEWURL = "http://150.158.173.37:8088/api/file/viewFiles?fileType=";
 
     @Autowired
     FileInfoService fileInfoService;
+
+    @Autowired
+    LanguageUtils languageUtils;
+
+    @Autowired
+    HttpUtils httpUtils;
 
     @PostMapping("/uploadFiles")
     public ResponseResult uploadFiles(HttpServletRequest request, String fileType)
@@ -44,7 +52,8 @@ public class FileUtils {
         MultipartHttpServletRequest multipartHttpServletRequest = (MultipartHttpServletRequest) request;
         List<MultipartFile> multipartFiles = multipartHttpServletRequest.getFiles("files");//获取附件
 
-        String pathName = PATH + "/" +fileType + "/";//想要存储文件的地址
+        List<AddDBReq> addDBReqList = new ArrayList<>();
+        String pathName = PATH  +fileType + "/";//想要存储文件的地址
         for (MultipartFile file: multipartFiles){
             String originalFilename = file.getOriginalFilename();
             log.info("name========"+file.getName());
@@ -58,7 +67,23 @@ public class FileUtils {
                 FileInfo fileInfo = new FileInfo();
                 fileInfo.setFileType(fileType);
                 fileInfo.setFileName(originalFilename);
+
+                String split = originalFilename.substring(0, originalFilename.indexOf("pdf")-1);
+                String name = split.replaceAll("\\(", "")
+                        .replaceAll("\\)", "")
+                        .replaceAll("（", "")
+                        .replaceAll("）", "");
+                fileInfo.setProduct(name);
+
                 fileInfoService.insertFile(fileInfo);
+
+                AddDBReq addDBReq = new AddDBReq();
+                addDBReq.setFolder(PATH+fileType+File.separator);
+                addDBReq.setFilename(originalFilename);
+                addDBReq.setProduct(languageUtils.getPinyin(name,""));
+                addDBReq.setDescript(name);
+                addDBReq.setUrl(VIEWURL+fileType+"&fileName="+originalFilename);
+                addDBReqList.add(addDBReq);
             } catch (Exception e) {
                 e.printStackTrace();
                 log.info("文件上传失败"+pathName);
@@ -74,6 +99,10 @@ public class FileUtils {
 
         }
 
+        log.info("addDBReqList="+addDBReqList);
+        if (addDBReqList.size()>0){
+            httpUtils.addDBFile(addDBReqList);
+        }
 
 
 
@@ -85,7 +114,7 @@ public class FileUtils {
 
         String fileType = fileInfo.getFileType();
         String fileName = fileInfo.getFileName();
-        String file = PATH+"/"+fileType+"/"+fileName;
+        String file = PATH+fileType+"/"+fileName;
         File files = new File(file);
         if (!files.exists()) {
             log.info("删除文件失败:" + fileName + "不存在！");
@@ -168,4 +197,20 @@ public class FileUtils {
         return false;
     }
 
+    public void viewFiles(String filePath, HttpServletResponse response) {
+
+        response.setContentType("application/pdf");
+        response.setHeader("Strict-Transport-Security", "max-age=31536000;includeSubDomains;preload");
+        File file = new File(filePath);
+        //文件流
+        try (FileInputStream fis = new FileInputStream(file);
+             OutputStream out = response.getOutputStream()) {//直接输出到前端iframe中
+            byte[] bytes = new byte[1024];
+            while (fis.read(bytes) > 0) {
+                out.write(bytes);
+            }
+        } catch (IOException e) {
+            log.warn(e.getMessage());
+        }
+    }
 }

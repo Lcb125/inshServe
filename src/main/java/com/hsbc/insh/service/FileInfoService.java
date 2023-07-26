@@ -16,6 +16,8 @@ import java.util.List;
 @Service
 public class FileInfoService {
 
+    private final static String VIEWURL = "http://150.158.173.37:8088/api/file/viewFiles?fileType=";
+
     @Autowired
     FileInfoMapper fileInfoMapper;
 
@@ -49,6 +51,9 @@ public class FileInfoService {
         fileInfo.setFileName(pageRequest.getFileName());
         fileInfo.setFileType(pageRequest.getFileType());
         List<FileInfo> fileInfos = fileInfoMapper.queryFile(fileInfo);
+        for (FileInfo info : fileInfos){
+            info.setViewUrl(VIEWURL+info.getFileType()+"&fileName="+info.getFileName());
+        }
         return new PageInfo<FileInfo>(fileInfos);
     }
 }

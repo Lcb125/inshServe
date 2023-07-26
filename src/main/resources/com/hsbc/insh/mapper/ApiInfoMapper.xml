@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hsbc.insh.mapper.ApiInfoMapper">
+
+    <resultMap id="apiResult" type="com.hsbc.insh.common.entity.ApiInfo">
+
+        <!-- 此处将实体类与数据库中进行了映射，property是实体类中的变量名-->
+        <id property="id" column="id"></id>
+        <result property="apiName" column="api_name"></result>
+        <result property="description" column="description"></result>
+        <result property="apiKey" column="api_key"></result>
+        <result property="endpoint" column="endpoint"></result>
+        <result property="userCode" column="user_code"></result>
+        <result property="status" column="status"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="updateTime" column="update_time"></result>
+        <result property="createBy" column="create_by"></result>
+        <result property="updateBy" column="update_by"></result>
+    </resultMap>
+
+    <sql id="Base_Column_List" >
+        id, api_name, description, api_key,endpoint, user_code,status, create_time, update_time, create_by,update_by,
+    </sql>
+
+    <insert id="insertApiInfo" parameterType="com.hsbc.insh.common.entity.ApiInfo">
+        insert into api_info(api_name,description,api_key,endpoint,user_code,status,update_time,create_by,update_by)
+        values(#{apiName},#{description},#{apiKey},#{endpoint},#{userCode},#{status},#{updateTime},#{createBy},#{updateBy});
+    </insert>
+
+    <update id="updateApiInfo" parameterType="com.hsbc.insh.common.entity.ApiInfo">
+        update api_info
+        <trim prefix="set" suffixOverrides=",">
+            <if test="apiName!=null and apiName!=''">
+                api_name = #{apiName},
+            </if>
+            <if test="description!=null and description!=''">
+                description = #{description},
+            </if>
+            <if test="apiKey!=null and apiKey!=''">
+                api_key = #{apiKey},
+            </if>
+            <if test="endpoint!=null and endpoint!=''">
+                endpoint = #{endpoint},
+            </if>
+            <if test="userCode!=null and userCode!=''">
+                user_code = #{userCode},
+            </if>
+            <if test="status!=null and status!=''">
+                status = #{status},
+            </if>
+            <if test="updateBy!=null and updateBy!=''">
+                updateBy = #{updateBy},
+            </if>
+            <if test="updateTime!=null">
+                update_time = #{updateTime},
+            </if>
+        </trim>
+        where id = #{id};
+    </update>
+
+    <update id="deleteApiInfo" parameterType="com.hsbc.insh.common.entity.ApiInfo">
+        update api_info set status = 'N' where id = #{id};
+    </update>
+
+    <select id="queryApis" parameterType="com.hsbc.insh.common.entity.ApiInfo" resultMap="apiResult">
+        select
+        <include refid="Base_Column_List" />
+        from api_info
+        <where>
+            <if test="apiName!=null and apiName!=''">
+                and api_name = #{apiName}
+            </if>
+            <if test="description!=null  and description!=''">
+                and description = #{description}
+            </if>
+            <if test="apiKey!=null and apiKey!=''">
+                and api_key = #{apiKey}
+            </if>
+            <if test="endpoint!=null  and endpoint!=''">
+                and endpoint = #{endpoint}
+            </if>
+            <if test="userCode!=null and userCode!=''">
+                and user_code = #{userCode}
+            </if>
+            <if test="status!=null  and status!=''">
+                and status = #{status}
+            </if>
+            <if test="createBy!=null and createBy!=''">
+                and create_by = #{createBy}
+            </if>
+            <if test="updateBy!=null  and updateBy!=''">
+                and update_by = #{updateBy}
+            </if>
+        </where>
+    </select>
+</mapper>

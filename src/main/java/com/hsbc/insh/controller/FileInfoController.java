@@ -7,29 +7,39 @@ import com.hsbc.insh.common.entity.ResponseResult;
 import com.hsbc.insh.common.page.PageRequest;
 import com.hsbc.insh.common.page.PageResponse;
 import com.hsbc.insh.common.util.FileUtils;
+import com.hsbc.insh.common.util.LanguageUtils;
+import com.hsbc.insh.mapper.FileInfoMapper;
 import com.hsbc.insh.service.FileInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.util.*;
 
 @Slf4j
 @Controller
 @RequestMapping("/file")
 public class FileInfoController {
 
+    private final static String PATH = "C:/codebase/insh-gpt/pdf/";
+
+    private final static String SEPERATOR = File.separator;
+
     @Autowired
     FileInfoService fileInfoService;
 
     @Autowired
+    FileInfoMapper fileInfoMapper;
+
+    @Autowired
     FileUtils fileUtils;
+
+    @Autowired
+    LanguageUtils languageUtils;
 
     @PostMapping(value = "/insertFile")
     @ResponseBody
@@ -79,20 +89,44 @@ public class FileInfoController {
         }
     }
 
-    @PostMapping(value = "/addFiles")
+    @GetMapping(value = "/viewFiles")
     @ResponseBody
-    public ResponseResult addFile(HttpServletRequest request,String fileType)  {
+    public void viewFiles(@RequestParam(value = "fileType") String fileType, @RequestParam(value = "fileName") String fileName, HttpServletResponse response)  {
 
-        return fileUtils.uploadFiles(request,fileType);
+        log.info("filetype="+fileType+",fileName="+fileName);
+        String filePath = PATH+fileType+SEPERATOR+fileName;
+        fileUtils.viewFiles(filePath,response);
 
     }
 
 
+
+    @PostMapping(value = "/addFiles")
+    @ResponseBody
+    public ResponseResult addFile(HttpServletRequest request,String fileType,String product)  {
+
+        return fileUtils.uploadFiles(request,fileType);
+
+    }
     @PostMapping(value = "/deleteFiles")
     @ResponseBody
     public ResponseResult deleteFiles(@RequestBody FileInfo fileInfo)  {
 
         return fileUtils.deleteFiles(fileInfo);
+
+    }
+    @GetMapping(value = "/getProducts")
+    @ResponseBody
+    public ResponseResult getProducts(@RequestParam(value = "fileType",required = false) String fileType)  {
+
+        List<Map<String,String>> resultMap = new ArrayList<>();
+        List<String> products = fileInfoMapper.getProducts(fileType);
+        for (String product:products){
+            Map<String,String> map = new HashMap<>();
+            map.put(product,languageUtils.getPinyin(product,""));
+            resultMap.add(map);
+        }
+        return new ResponseResult(RespEnum.SUCCESS,resultMap);
 
     }
 

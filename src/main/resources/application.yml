@@ -1,14 +1,19 @@
 server:
-  port: 8080
+  port: 8088
   servlet:
     context-path: /api
 spring:
-  # ˝æ›ø‚≈‰÷√
+  #Êï∞ÊçÆÂ∫ì‰ø°ÊÅØÈÖçÁΩÆ
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://sh-cynosdbmysql-grp-dq4lwxcu.sql.tencentcdb.com:20065/chatMgmt?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://sh-cynosdbmysql-grp-dq4lwxcu.sql.tencentcdb.com:20065/gptMgmt?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
     username: root
     password: Ican_2023
-  # MyBatis≈‰÷√
+  # MyBatisÈÖçÁΩÆÊñá‰ª∂
 mybatis:
   mapper-locations: com/hsbc/insh/mapper/*Mapper.xml
+
+serve:
+  python:
+    addDBDocs: http://localhost:80/api/v2/addDBDocs #http://150.158.173.37:83/
+    removeDBDocs: http://localhost:80/api/v2/removeDBDocs #http://150.158.173.37:83/

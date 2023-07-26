@@ -15,4 +15,6 @@ public interface FileInfoMapper {
     List<FileInfo> queryFile(FileInfo fileInfo);
 
     boolean deleteFile(FileInfo fileInfo);
+
+    List<String> getProducts(String fileType);
 }
